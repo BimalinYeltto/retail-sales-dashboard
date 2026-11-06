@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retail Sales Dashboard</title>
+<style>
+  body{font-family:Segoe UI,Arial,sans-serif;margin:0;background:#f1f5f9;color:#0f172a}
+  header{background:#1e3a8a;color:#fff;padding:18px 28px}
+  header h1{margin:0;font-size:1.5rem}
+  main{padding:20px 28px;max-width:1200px;margin:auto}
+  form{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+  select,button{padding:8px 12px;border-radius:6px;border:1px solid #cbd5e1;font-size:1rem}
+  button{background:#2563eb;color:#fff;border:none;cursor:pointer}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px}
+  .kpi{background:#fff;padding:16px;border-radius:10px;box-shadow:0 1px 3px #0002}
+  .kpi span{display:block;color:#64748b;font-size:.85rem}
+  .kpi b{font-size:1.5rem}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px}
+  .card{background:#fff;padding:10px;border-radius:10px;box-shadow:0 1px 3px #0002}
+  .card img{width:100%}
+  .upload{background:#fff;padding:14px 16px;border-radius:10px;box-shadow:0 1px 3px #0002;margin-bottom:18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .upload form{margin:0}
+  .msg{padding:10px 14px;border-radius:8px;margin-bottom:14px}
+  .msg.ok{background:#dcfce7;color:#166534}
+  .msg.error{background:#fee2e2;color:#991b1b}
+  .hint{color:#64748b;font-size:.85rem;width:100%}
+</style>
+</head>
+<body>
+<header><h1>Retail Sales Dashboard</h1></header>
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, m in messages %}<div class="msg {{ cat }}">{{ m }}</div>{% endfor %}
+  {% endwith %}
+  <div class="upload">
+    <form method="post" action="/upload" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".csv" required>
+      <button type="submit">Upload CSV</button>
+    </form>
+    <form method="post" action="/reset"><button type="submit" style="background:#64748b">Use sample data</button></form>
+    <span><b>Current file:</b> {{ filename }}</span>
+    <span class="hint">Required columns: {{ required|join(', ') }}. Optional: profit, order_id.</span>
+  </div>
+  <form method="get">
+    <label>Region <select name="region">{% for r in regions %}<option {{ 'selected' if r==region }}>{{ r }}</option>{% endfor %}</select></label>
+    <label>Category <select name="category">{% for c in categories %}<option {{ 'selected' if c==category }}>{{ c }}</option>{% endfor %}</select></label>
+    <button type="submit">Apply filters</button>
+  </form>
+  {% if kpis %}
+  <div class="kpis">
+    <div class="kpi"><span>Total Sales (INR)</span><b>{{ kpis.sales }}</b></div>
+    <div class="kpi"><span>Total Profit (INR)</span><b>{{ kpis.profit }}</b></div>
+    <div class="kpi"><span>Orders</span><b>{{ kpis.orders }}</b></div>
+    <div class="kpi"><span>Avg Order Value</span><b>{{ kpis.avg }}</b></div>
+  </div>
+  <div class="grid">
+    {% for key in ['trend','category','region','products'] %}
+    <div class="card"><img src="data:image/png;base64,{{ charts[key] }}" alt="{{ key }} chart"></div>
+    {% endfor %}
+  </div>
+  {% else %}<p>No data for this filter.</p>{% endif %}
+</main>
+</body>
+</html>
